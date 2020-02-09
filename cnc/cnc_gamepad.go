@@ -7,14 +7,11 @@ import (
 
 	"github.com/jinzhu/copier"
 	"github.com/karalabe/hid"
+	"github.com/magicmonkey/cnc/gamepad/display"
 	"github.com/magicmonkey/cnc/gamepad/gcode"
-
-	flp "github.com/adrianh-za/go-fourletterphat-rpi"
-	i2c "github.com/d2r2/go-i2c"
 )
 
 var SerialPort io.ReadWriteCloser
-var i2c_port *i2c.I2C
 
 func processDevice() {
 	//devs := hid.Enumerate(0x057e, 0x2009)
@@ -63,6 +60,7 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 	if curr_buttons.Buttons.A && curr_buttons.Buttons.A != prev_buttons.Buttons.A {
 		gcode.SendGcode("M112")
 		gcode.SendGcode("M999")
+		return
 	}
 
 	// - Home (with L2)
@@ -72,33 +70,33 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 
 	if curr_buttons.Shoulder.L2 != prev_buttons.Shoulder.L2 {
 		if curr_buttons.Shoulder.L2 {
-			fourletter("Home")
+			display.Show("Home")
 		} else {
-			fourletter("")
+			display.Show("")
 		}
 	}
 
 	if curr_buttons.Shoulder.L1 != prev_buttons.Shoulder.L1 {
 		if curr_buttons.Shoulder.L1 {
-			fourletter("SetZ")
+			display.Show("SetZ")
 		} else {
-			fourletter("")
+			display.Show("")
 		}
 	}
 
 	if curr_buttons.Shoulder.R1 != prev_buttons.Shoulder.R1 {
 		if curr_buttons.Shoulder.R1 {
-			fourletter("RetZ")
+			display.Show("RetZ")
 		} else {
-			fourletter("")
+			display.Show("")
 		}
 	}
 
 	if curr_buttons.Shoulder.R2 != prev_buttons.Shoulder.R2 {
 		if curr_buttons.Shoulder.R2 {
-			fourletter("Prob")
+			display.Show("Prob")
 		} else {
-			fourletter("")
+			display.Show("")
 		}
 	}
 
@@ -331,23 +329,14 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 
 func Close() {
 	gcode.Close()
-	fmt.Println("Closing display...")
-	flp.ClearChars(i2c_port)
-	i2c_port.Close()
-	fmt.Println("Closed display")
-}
-
-func fourletter(t string) {
-	flp.WriteCharacters(i2c_port, t)
+	display.Close()
 }
 
 func Initialise() {
 	gcode.Initialise()
+	display.Initialise()
 
-	// Initialize the LED display
-	flp.Initialize(i2c_port) // Will set brightness to 15, will switch of blink, clears display
-	fourletter("CNC")
-	fmt.Println("Display open")
+	display.Show("CNC")
 }
 
 func Run() {
