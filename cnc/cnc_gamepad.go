@@ -114,7 +114,7 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 			gcode.SendGcode("G0 Z0")
 		}
 		if curr_buttons.Shoulder.R2 {
-			// TODO
+			gcode.SendGcode("M98 P\"A1 - Probe Z\"")
 		}
 	}
 
