@@ -249,7 +249,7 @@ func main() {
 
 	fmt.Println("Opening display...")
 	i2c_port, err = i2c.NewI2C(flp.AddressDefault, 1)
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -275,8 +275,6 @@ func processDevice() {
 		cleanup()
 		os.Exit(1)
 	}()
-
-
 
 	devs := hid.Enumerate(0x2dc8, 0x6000)
 	if len(devs) == 0 {
@@ -367,6 +365,7 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 			send_gcode("G28 Z")
 		}
 		if curr_buttons.Shoulder.L1 {
+			send_gcode("G55")
 			send_gcode("G10 P2 L20 Z0")
 			send_gcode("M500")
 		}
@@ -384,6 +383,7 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 			send_gcode("G28 X")
 		}
 		if curr_buttons.Shoulder.L1 {
+			send_gcode("G55")
 			send_gcode("G10 P2 L20 X0")
 			send_gcode("M500")
 		}
@@ -401,6 +401,7 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 			send_gcode("G28 Y")
 		}
 		if curr_buttons.Shoulder.L1 {
+			send_gcode("G55")
 			send_gcode("G10 P2 L20 Y0")
 			send_gcode("M500")
 		}
@@ -414,7 +415,20 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 
 	// Home button (below yellow) is "home x and y"
 	if curr_buttons.Buttons.Home && curr_buttons.Buttons.Home != prev_buttons.Buttons.Home {
-		send_gcode("G0 X0 Y0")
+		if curr_buttons.Shoulder.L2 {
+			// Home
+			send_gcode("G28 X Y Z")
+		}
+		if curr_buttons.Shoulder.L1 {
+			// Set zero
+			send_gcode("G55")
+			send_gcode("G10 P2 L20 X0 Y0")
+			send_gcode("M500")
+		}
+		if curr_buttons.Shoulder.R1 {
+			// Return to zero
+			send_gcode("G0 X0 Y0")
+		}
 	}
 
 	// D-pad up is plus Y
@@ -567,6 +581,9 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 		send_gcode("M121")
 	}
 
+	if curr_buttons.Buttons.Start && curr_buttons.Buttons.Start != prev_buttons.Buttons.Start {
+		send_gcode("M292 P0")
+	}
 }
 
 func send_gcode(gcode string) {
@@ -578,8 +595,10 @@ func send_gcode(gcode string) {
 }
 
 func cleanup() {
-	fmt.Println("Closing display...")
+	fmt.Println("Closing serial port...")
 	SerialPort.Close()
+	fmt.Println("Closed serial port")
+	fmt.Println("Closing display...")
 	flp.ClearChars(i2c_port)
 	i2c_port.Close()
 	fmt.Println("Closed display")
