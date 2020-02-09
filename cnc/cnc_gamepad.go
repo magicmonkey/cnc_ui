@@ -3,13 +3,11 @@ package cnc
 import (
 	"fmt"
 	"io"
-	"os"
-	"os/signal"
 	"time"
 
-	"github.com/jacobsa/go-serial/serial"
 	"github.com/jinzhu/copier"
 	"github.com/karalabe/hid"
+	"github.com/magicmonkey/cnc/gamepad/gcode"
 
 	flp "github.com/adrianh-za/go-fourletterphat-rpi"
 	i2c "github.com/d2r2/go-i2c"
@@ -20,14 +18,6 @@ var i2c_port *i2c.I2C
 
 func processDevice() {
 	//devs := hid.Enumerate(0x057e, 0x2009)
-
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c
-		cleanup()
-		os.Exit(1)
-	}()
 
 	devs := hid.Enumerate(0x2dc8, 0x6000)
 	if len(devs) == 0 {
@@ -71,8 +61,8 @@ func processDevice() {
 func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 	// Red button (A) is emergency stop
 	if curr_buttons.Buttons.A && curr_buttons.Buttons.A != prev_buttons.Buttons.A {
-		send_gcode("M112")
-		send_gcode("M999")
+		gcode.SendGcode("M112")
+		gcode.SendGcode("M999")
 	}
 
 	// - Home (with L2)
@@ -115,15 +105,15 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 	// Yellow button (B) is z-axis operations:
 	if curr_buttons.Buttons.B && curr_buttons.Buttons.B != prev_buttons.Buttons.B {
 		if curr_buttons.Shoulder.L2 {
-			send_gcode("G28 Z")
+			gcode.SendGcode("G28 Z")
 		}
 		if curr_buttons.Shoulder.L1 {
-			send_gcode("G55")
-			send_gcode("G10 P2 L20 Z0")
-			send_gcode("M500")
+			gcode.SendGcode("G55")
+			gcode.SendGcode("G10 P2 L20 Z0")
+			gcode.SendGcode("M500")
 		}
 		if curr_buttons.Shoulder.R1 {
-			send_gcode("G0 Z0")
+			gcode.SendGcode("G0 Z0")
 		}
 		if curr_buttons.Shoulder.R2 {
 			// TODO
@@ -133,15 +123,15 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 	// Green button (Y) is x-axis operations:
 	if curr_buttons.Buttons.Y && curr_buttons.Buttons.Y != prev_buttons.Buttons.Y {
 		if curr_buttons.Shoulder.L2 {
-			send_gcode("G28 X")
+			gcode.SendGcode("G28 X")
 		}
 		if curr_buttons.Shoulder.L1 {
-			send_gcode("G55")
-			send_gcode("G10 P2 L20 X0")
-			send_gcode("M500")
+			gcode.SendGcode("G55")
+			gcode.SendGcode("G10 P2 L20 X0")
+			gcode.SendGcode("M500")
 		}
 		if curr_buttons.Shoulder.R1 {
-			send_gcode("G0 X0")
+			gcode.SendGcode("G0 X0")
 		}
 		if curr_buttons.Shoulder.R2 {
 			// TODO
@@ -151,15 +141,15 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 	// Blue button (X) is y-axis operations:
 	if curr_buttons.Buttons.X && curr_buttons.Buttons.X != prev_buttons.Buttons.X {
 		if curr_buttons.Shoulder.L2 {
-			send_gcode("G28 Y")
+			gcode.SendGcode("G28 Y")
 		}
 		if curr_buttons.Shoulder.L1 {
-			send_gcode("G55")
-			send_gcode("G10 P2 L20 Y0")
-			send_gcode("M500")
+			gcode.SendGcode("G55")
+			gcode.SendGcode("G10 P2 L20 Y0")
+			gcode.SendGcode("M500")
 		}
 		if curr_buttons.Shoulder.R1 {
-			send_gcode("G0 Y0")
+			gcode.SendGcode("G0 Y0")
 		}
 		if curr_buttons.Shoulder.R2 {
 			// TODO
@@ -170,17 +160,17 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 	if curr_buttons.Buttons.Home && curr_buttons.Buttons.Home != prev_buttons.Buttons.Home {
 		if curr_buttons.Shoulder.L2 {
 			// Home
-			send_gcode("G28 X Y Z")
+			gcode.SendGcode("G28 X Y Z")
 		}
 		if curr_buttons.Shoulder.L1 {
 			// Set zero
-			send_gcode("G55")
-			send_gcode("G10 P2 L20 X0 Y0")
-			send_gcode("M500")
+			gcode.SendGcode("G55")
+			gcode.SendGcode("G10 P2 L20 X0 Y0")
+			gcode.SendGcode("M500")
 		}
 		if curr_buttons.Shoulder.R1 {
 			// Return to zero
-			send_gcode("G0 X0 Y0")
+			gcode.SendGcode("G0 X0 Y0")
 		}
 	}
 
@@ -202,11 +192,11 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 		if distance == 0.0 {
 			return
 		}
-		send_gcode("M120")
-		send_gcode("G91")
+		gcode.SendGcode("M120")
+		gcode.SendGcode("G91")
 		cmd := fmt.Sprintf("G1 Y%.1f F2000", distance)
-		send_gcode(cmd)
-		send_gcode("M121")
+		gcode.SendGcode(cmd)
+		gcode.SendGcode("M121")
 	}
 
 	// D-pad down is minus Y
@@ -227,11 +217,11 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 		if distance == 0.0 {
 			return
 		}
-		send_gcode("M120")
-		send_gcode("G91")
+		gcode.SendGcode("M120")
+		gcode.SendGcode("G91")
 		cmd := fmt.Sprintf("G1 Y-%.1f F2000", distance)
-		send_gcode(cmd)
-		send_gcode("M121")
+		gcode.SendGcode(cmd)
+		gcode.SendGcode("M121")
 	}
 
 	// D-pad right is plus X
@@ -252,11 +242,11 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 		if distance == 0.0 {
 			return
 		}
-		send_gcode("M120")
-		send_gcode("G91")
+		gcode.SendGcode("M120")
+		gcode.SendGcode("G91")
 		cmd := fmt.Sprintf("G1 X%.1f F2000", distance)
-		send_gcode(cmd)
-		send_gcode("M121")
+		gcode.SendGcode(cmd)
+		gcode.SendGcode("M121")
 	}
 
 	// D-pad left is minus X
@@ -277,11 +267,11 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 		if distance == 0.0 {
 			return
 		}
-		send_gcode("M120")
-		send_gcode("G91")
+		gcode.SendGcode("M120")
+		gcode.SendGcode("G91")
 		cmd := fmt.Sprintf("G1 X-%.1f F2000", distance)
-		send_gcode(cmd)
-		send_gcode("M121")
+		gcode.SendGcode(cmd)
+		gcode.SendGcode("M121")
 	}
 
 	// Joystick Left pushed up is plus Z
@@ -302,11 +292,11 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 		if distance == 0.0 {
 			return
 		}
-		send_gcode("M120")
-		send_gcode("G91")
+		gcode.SendGcode("M120")
+		gcode.SendGcode("G91")
 		cmd := fmt.Sprintf("G1 Z%.1f F2000", distance)
-		send_gcode(cmd)
-		send_gcode("M121")
+		gcode.SendGcode(cmd)
+		gcode.SendGcode("M121")
 	}
 
 	// Joystick Left pushed down is minus Z
@@ -327,30 +317,20 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 		if distance == 0.0 {
 			return
 		}
-		send_gcode("M120")
-		send_gcode("G91")
+		gcode.SendGcode("M120")
+		gcode.SendGcode("G91")
 		cmd := fmt.Sprintf("G1 Z-%.1f F2000", distance)
-		send_gcode(cmd)
-		send_gcode("M121")
+		gcode.SendGcode(cmd)
+		gcode.SendGcode("M121")
 	}
 
 	if curr_buttons.Buttons.Start && curr_buttons.Buttons.Start != prev_buttons.Buttons.Start {
-		send_gcode("M292 P0")
+		gcode.SendGcode("M292 P0")
 	}
 }
 
-func send_gcode(gcode string) {
-	fmt.Println(gcode)
-	_, err := SerialPort.Write([]byte(gcode + "\n"))
-	if err != nil {
-		panic(err)
-	}
-}
-
-func cleanup() {
-	fmt.Println("Closing serial port...")
-	SerialPort.Close()
-	fmt.Println("Closed serial port")
+func Close() {
+	gcode.Close()
 	fmt.Println("Closing display...")
 	flp.ClearChars(i2c_port)
 	i2c_port.Close()
@@ -362,28 +342,7 @@ func fourletter(t string) {
 }
 
 func Initialise() {
-	fmt.Println("Opening serial port...")
-	// Serial port stuff
-	options := serial.OpenOptions{
-		PortName:        "/dev/serial0",
-		BaudRate:        57600,
-		DataBits:        8,
-		StopBits:        1,
-		MinimumReadSize: 1,
-	}
-	var err error
-	SerialPort, err = serial.Open(options)
-	if err != nil {
-		panic(err)
-	}
-	defer SerialPort.Close()
-	fmt.Println("Serial port open")
-
-	fmt.Println("Opening display...")
-	i2c_port, err = i2c.NewI2C(flp.AddressDefault, 1)
-	if err != nil {
-		panic(err)
-	}
+	gcode.Initialise()
 
 	// Initialize the LED display
 	flp.Initialize(i2c_port) // Will set brightness to 15, will switch of blink, clears display
