@@ -8,6 +8,8 @@ import (
 )
 
 var i2c_port *i2c.I2C
+var foregroundText string
+var backgroundText string
 
 func Close() {
 	fmt.Println("Closing display...")
@@ -16,8 +18,22 @@ func Close() {
 	fmt.Println("Closed display")
 }
 
-func Show(t string) {
-	flp.WriteCharacters(i2c_port, t)
+func ShowForeground(t string) {
+	foregroundText = t
+	updateDisplay()
+}
+
+func ShowBackground(t string) {
+	backgroundText = t
+	updateDisplay()
+}
+
+func updateDisplay() {
+	if foregroundText != "" {
+		flp.WriteCharacters(i2c_port, foregroundText)
+	} else {
+		flp.WriteCharacters(i2c_port, backgroundText)
+	}
 }
 
 func Initialise() {

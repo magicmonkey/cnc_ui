@@ -70,33 +70,33 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 
 	if curr_buttons.Shoulder.L2 != prev_buttons.Shoulder.L2 {
 		if curr_buttons.Shoulder.L2 {
-			display.Show("Home")
+			display.ShowForeground("Home")
 		} else {
-			display.Show("")
+			display.ShowForeground("")
 		}
 	}
 
 	if curr_buttons.Shoulder.L1 != prev_buttons.Shoulder.L1 {
 		if curr_buttons.Shoulder.L1 {
-			display.Show("SetZ")
+			display.ShowForeground("SetZ")
 		} else {
-			display.Show("")
+			display.ShowForeground("")
 		}
 	}
 
 	if curr_buttons.Shoulder.R1 != prev_buttons.Shoulder.R1 {
 		if curr_buttons.Shoulder.R1 {
-			display.Show("RetZ")
+			display.ShowForeground("RetZ")
 		} else {
-			display.Show("")
+			display.ShowForeground("")
 		}
 	}
 
 	if curr_buttons.Shoulder.R2 != prev_buttons.Shoulder.R2 {
 		if curr_buttons.Shoulder.R2 {
-			display.Show("Prob")
+			display.ShowForeground("Prob")
 		} else {
-			display.Show("")
+			display.ShowForeground("")
 		}
 	}
 
@@ -322,8 +322,16 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 		gcode.SendGcode("M121")
 	}
 
+	// Start a "print" which is either paused or previously selected via M23
 	if curr_buttons.Buttons.Start && curr_buttons.Buttons.Start != prev_buttons.Buttons.Start {
-		gcode.SendGcode("M292 P0")
+		if curr_buttons.Shoulder.L2 && curr_buttons.Shoulder.R2 {
+			gcode.SendGcode("M24")
+		}
+	}
+
+	// Pause a "print"
+	if curr_buttons.Buttons.Select && curr_buttons.Buttons.Select != prev_buttons.Buttons.Select {
+		gcode.SendGcode("M25")
 	}
 }
 
@@ -336,7 +344,7 @@ func Initialise() {
 	gcode.Initialise()
 	display.Initialise()
 
-	display.Show("CNC")
+	display.ShowForeground("CNC")
 }
 
 func Run() {
