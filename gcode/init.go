@@ -24,12 +24,11 @@ func Initialise() {
 	if err != nil {
 		panic(err)
 	}
-	defer SerialPort.Close()
 
 	fmt.Println("Serial port open")
 
 	// Start the status request loop
-	//go status_request_loop()
+	go status_request_loop()
 }
 
 func Close() {
