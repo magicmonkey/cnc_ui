@@ -16,7 +16,7 @@ type StatusResponse struct {
 	Homed    []int     `json:"homed"`
 }
 
-func status_request_loop() {
+func serial_read_loop() {
 	buf := make([]byte, 32)
 	for {
 		n, err := SerialPort.Read(buf)

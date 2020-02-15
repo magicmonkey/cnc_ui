@@ -3,6 +3,7 @@ package gcode
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/jacobsa/go-serial/serial"
 )
@@ -27,8 +28,22 @@ func Initialise() {
 
 	fmt.Println("Serial port open")
 
+	// Start the serial port read loop
+	go serial_read_loop()
+
 	// Start the status request loop
 	go status_request_loop()
+}
+
+func status_request_loop() {
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			SendGcode("M408 S0")
+		}
+	}
 }
 
 func Close() {
