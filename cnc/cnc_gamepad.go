@@ -9,6 +9,7 @@ import (
 	"github.com/karalabe/hid"
 	"github.com/magicmonkey/cnc/gamepad/display"
 	"github.com/magicmonkey/cnc/gamepad/gcode"
+	"github.com/magicmonkey/cnc/gamepad/web"
 )
 
 var SerialPort io.ReadWriteCloser
@@ -343,8 +344,9 @@ func Close() {
 func Initialise() {
 	gcode.Initialise()
 	display.Initialise()
+	web.Initialise()
 
-	display.ShowForeground("CNC")
+	display.ShowBackground("CNC")
 }
 
 func Run() {

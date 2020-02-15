@@ -35,18 +35,20 @@ func Initialise() {
 	// Start the serial port read loop
 	go serial_read_loop()
 
+	// Start the files request loop
+	go gcode_send_loop(1*time.Second, "M408 S0")
+
 	// Start the status request loop
-	go status_request_loop()
+	go gcode_send_loop(3*time.Second, "M20 S2")
 }
 
-func status_request_loop() {
-	ticker := time.NewTicker(2 * time.Second)
+func gcode_send_loop(interval time.Duration, gcode string) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
-			SendGcode("M20 S2")
-			//SendGcode("M408 S0")
+			SendGcode(gcode)
 		}
 	}
 }

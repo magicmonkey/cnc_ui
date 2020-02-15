@@ -30,10 +30,10 @@ func ShowBackground(t string) {
 
 func updateDisplay() {
 	if foregroundText != "" {
-		fmt.Println("***", foregroundText)
+		fmt.Println("f**", foregroundText)
 		flp.WriteCharacters(i2c_port, foregroundText)
 	} else {
-		fmt.Println("***", backgroundText)
+		fmt.Println("b**", backgroundText)
 		flp.WriteCharacters(i2c_port, backgroundText)
 	}
 }
