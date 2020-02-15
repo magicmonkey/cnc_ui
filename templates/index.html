@@ -1,9 +1,14 @@
 <html>
 <body>
-	<h1>CNC files</h1>
+	<h1>CNC</h1>
+	{{range $i, $fs := .Files}}
+	<h2>CNC files in {{$i}}</h2>
 	<ul>
-		<li>Hello</li>
+		{{range $fs}}
+			<li>{{.}}</li>
+		{{end}}
 	</ul>
+	{{end}}
 </body>
 </html>
 

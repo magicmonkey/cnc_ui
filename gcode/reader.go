@@ -71,5 +71,16 @@ func interpret(s StatusResponse) {
 	} else if s.Dir != "" {
 		// It's an M20 response
 		FilesList[s.Dir] = s.Files
+		// Recurse the directory tree
+		look_for_dirs(s)
+	}
+}
+
+func look_for_dirs(s StatusResponse) {
+	for _, f := range s.Files {
+		if f[0:1] == "*" {
+			cmd := fmt.Sprintf("M20 S2 P\"%s%s\"", s.Dir, f[1:])
+			SendGcode(cmd)
+		}
 	}
 }

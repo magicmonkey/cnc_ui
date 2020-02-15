@@ -36,10 +36,11 @@ func Initialise() {
 	go serial_read_loop()
 
 	// Start the files request loop
-	go gcode_send_loop(1*time.Second, "M408 S0")
+	//go gcode_send_loop(3*time.Second, "M20 S2")
+	SendGcode("M20 S2")
 
 	// Start the status request loop
-	go gcode_send_loop(3*time.Second, "M20 S2")
+	go gcode_send_loop(1*time.Second, "M408 S0")
 }
 
 func gcode_send_loop(interval time.Duration, gcode string) {
