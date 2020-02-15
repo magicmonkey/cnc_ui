@@ -1,8 +1,12 @@
 package gcode
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+
+	"github.com/magicmonkey/cnc/gamepad/display"
 )
 
 type StatusResponse struct {
@@ -10,6 +14,21 @@ type StatusResponse struct {
 	Position []float32 `json:"pos"`
 	Babystep float32   `json:"babystep"`
 	Homed    []int     `json:"homed"`
+}
+
+func status_request_loop() {
+	buf := make([]byte, 32)
+	for {
+		n, err := SerialPort.Read(buf)
+		if err != nil {
+			if err != io.EOF {
+				fmt.Println("Error reading from serial port: ", err)
+			}
+		} else {
+			buf = buf[:n]
+			fmt.Println("Rx: ", hex.EncodeToString(buf))
+		}
+	}
 }
 
 func read() {
@@ -21,4 +40,28 @@ func read() {
 		panic(err)
 	}
 	fmt.Printf("%#v\n", s)
+	return
+
+	// Check for status message
+	// status: I=idle, P=printing from SD card, S=stopped (i.e. needs a reset), C=running config file (i.e starting up), A=paused, D=pausing, R=resuming from a pause, B=busy (e.g. running a macro), F=performing firmware update
+	switch s.Status {
+	case "I":
+		display.ShowBackground("")
+	case "B":
+		display.ShowBackground("Busy")
+	case "P":
+		display.ShowBackground("Exec")
+	case "S":
+		display.ShowBackground("Stop")
+	case "C":
+		display.ShowBackground("Strt")
+	case "A":
+		display.ShowBackground("Paus")
+	case "D":
+		display.ShowBackground("Paus")
+	case "R":
+		display.ShowBackground("Resm")
+	case "F":
+		display.ShowBackground("FwUp")
+	}
 }

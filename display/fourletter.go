@@ -30,14 +30,26 @@ func ShowBackground(t string) {
 
 func updateDisplay() {
 	if foregroundText != "" {
+		fmt.Println("***", foregroundText)
 		flp.WriteCharacters(i2c_port, foregroundText)
 	} else {
+		fmt.Println("***", backgroundText)
 		flp.WriteCharacters(i2c_port, backgroundText)
 	}
 }
 
 func Initialise() {
+	fmt.Println("Opening display...")
+	var err error
+	i2c_port, err = i2c.NewI2C(flp.AddressDefault, 1)
+	if err != nil {
+		panic(err)
+	}
+
 	// Initialize the LED display
-	flp.Initialize(i2c_port) // Will set brightness to 15, will switch of blink, clears display
+	err = flp.Initialize(i2c_port) // Will set brightness to 15, will switch of blink, clears display
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("Display open")
 }
