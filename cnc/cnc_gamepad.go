@@ -70,7 +70,9 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 	// - Probe (with R2)
 
 	if curr_buttons.Shoulder.L2 != prev_buttons.Shoulder.L2 {
-		if curr_buttons.Shoulder.L2 {
+		if curr_buttons.Shoulder.L2 && curr_buttons.Shoulder.R2 {
+			display.ShowForeground("Strt")
+		} else if curr_buttons.Shoulder.L2 {
 			display.ShowForeground("Home")
 		} else {
 			display.ShowForeground("")
@@ -94,7 +96,9 @@ func processButtonPress(curr_buttons *ButtonState, prev_buttons *ButtonState) {
 	}
 
 	if curr_buttons.Shoulder.R2 != prev_buttons.Shoulder.R2 {
-		if curr_buttons.Shoulder.R2 {
+		if curr_buttons.Shoulder.L2 && curr_buttons.Shoulder.R2 {
+			display.ShowForeground("Strt")
+		} else if curr_buttons.Shoulder.R2 {
 			display.ShowForeground("Prob")
 		} else {
 			display.ShowForeground("")
